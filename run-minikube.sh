@@ -49,7 +49,7 @@ rm app-secrets.yaml
 
 kubectl -n $ns apply -f state-db.yaml
 cat main-container.yaml | \
-  sed "s,{{IMAGE}},$DOCKER_USERNAME/multibot-main:latest,g" | \
+  sed "s,{{IMAGE}},docker.io/$DOCKER_USERNAME/multibot-main:latest,g" | \
   sed "s,{{IMAGE_PULL_POLICY}},$IMAGE_PULL_POLICY,g" | \
   sed "s,{{SERVICE_TYPE}},LoadBalancer,g" | \
   kubectl -n $ns apply -f -

@@ -100,7 +100,7 @@ Navigate to `http://localhost:8000` in your browser to see the app. The main pag
 
 After you have run it once with `./run-compose.sh`, you can use `./run-go.sh` to run it with golang directly (redis still runs in docker, but that never needs to be rebuilt) which is faster for testing small changes.
 
-Running the app with docker or go directly has some limitations - it is hardcoded to run only on certain twitch channels, and the sign up function will not work since it has no way of creating more instances while running this way. If you want to use different channels, replace `jjvanvan` and `minecraft1167890` in `run-go.sh` and/or `compose.yaml`, or follow the next section to run it locally in kubernetes.
+Running the app with docker or go directly has some limitations - it is hardcoded to run only on certain twitch channels, and the sign up function will not work since it has no way of creating more instances while running this way. If you want to use different channels, replace `epjane` and `minecraft1167890` in `run-go.sh` and/or `compose.yaml`, or follow the next section to run it locally in kubernetes.
 
 Note: I do publish builds of the docker containers, but the project is structured in a way that it is easier to just build them yourself since you already cloned the repo and the scripts are all set up that way.
 

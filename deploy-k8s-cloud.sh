@@ -55,8 +55,15 @@ rm app-secrets.yaml
 # https://cert-manager.io/docs/tutorials/acme/nginx-ingress/
 # https://dev.to/chrisme/setting-up-nginx-ingress-w-automatically-generated-letsencrypt-certificates-on-kubernetes-4f1k
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.13.0/deploy/static/provider/cloud/deploy.yaml
+
 kubectl create namespace cert-manager || :
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.16.1/cert-manager.yaml
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.18.2/cert-manager.yaml
+
+while kubectl -n cert-manager get deployment | grep ' 0 '; do
+  sleep 1
+done
+sleep 1
 
 # patch it to add resource limits:
 for deployment in cert-manager cert-manager-cainjector cert-manager-webhook; do
@@ -109,7 +116,7 @@ cat prod-issuer.yaml | sed "s/{{EMAIL}}/$EMAIL_ADDRESS/g" | kubectl create -f - 
 
 # kubectl -n $ns apply -f state-db.yaml
 cat main-container.yaml | \
-  sed "s,{{IMAGE}},$DOCKER_USERNAME/multibot-main:latest,g" | \
+  sed "s,{{IMAGE}},docker.io/$DOCKER_USERNAME/multibot-main:latest,g" | \
   sed "s,{{IMAGE_PULL_POLICY}},$IMAGE_PULL_POLICY,g" | \
   sed "s,{{SERVICE_TYPE}},ClusterIP,g" | \
   kubectl -n $ns apply -f -

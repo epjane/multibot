@@ -35,7 +35,7 @@ if (!argv._[0]) {
 const backupFilePath = argv._[0];
 
 const redis_client = redis.createClient({
-    url: process.env.STATE_DB_URL.replace('private-', ''),
+    url: process.env.STATE_DB_URL,
     password: process.env.STATE_DB_PASSWORD,
 });
 redis_client.on('error', err => console.log('Redis Client Error', err));
@@ -53,18 +53,23 @@ redis_client.on('error', err => console.log('Redis Client Error', err));
         const data = JSON.parse(fs.readFileSync(backupFilePath).toString('utf-8'));
 
         for (const channel of Object.keys(data.channels)) {
+            console.log(channel)
             await redis_client.sAdd(`${PREDIS}channels`, channel);
 
             for (const prop_name of Object.keys(DEFAULT_CHANNEL_PROPS)) {
                 if (data.channels[channel][prop_name] !== undefined) {
-                    await redis_client.set(`${PREDIS}channels/${channel}/channel_props/${prop_name}`, JSON.stringify(data.channels[channel][prop_name]));
+                    const prop_value = JSON.stringify(data.channels[channel][prop_name]);
+                    console.log(channel, prop_name, prop_value);
+                    await redis_client.set(`${PREDIS}channels/${channel}/channel_props/${prop_name}`, prop_value);
                 }
             }
 
             if (data.channels[channel].viewers) {
                 for (const viewer of Object.keys(data.channels[channel].viewers)) {
                     await redis_client.sAdd(`${PREDIS}channels/${channel}/viewers`, viewer);
-                    for (const prop_name of Object.keys(data.channels[channel].viewers[viewer])) {
+                    const viewerProps = data.channels[channel].viewers[viewer];
+                    console.log(channel, viewer, viewerProps);
+                    for (const prop_name of Object.keys(viewerProps)) {
                         await redis_client.hSet(`${PREDIS}channels/${channel}/viewers/${viewer}`, prop_name, JSON.stringify(data.channels[channel].viewers[viewer][prop_name]));
                     }
                 }

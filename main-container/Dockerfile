@@ -1,4 +1,4 @@
-FROM golang:1.23.5 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.23.5 AS builder
 ARG CGO_ENABLED=0
 WORKDIR /app
 
@@ -8,7 +8,9 @@ COPY common/ common/
 COPY main-container/ main-container/
 RUN mv main-container/src/*.go .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o server
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o server
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

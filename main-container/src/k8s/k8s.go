@@ -45,7 +45,7 @@ func loadTenantYAML(channel string) (*appsv1.Deployment, *corev1.Service, error)
 		return nil, nil, err
 	}
 	text := string(fileBytes)
-	text = strings.ReplaceAll(text, "{{IMAGE}}", env.DOCKER_USERNAME+"/multibot-tenant:latest")
+	text = strings.ReplaceAll(text, "{{IMAGE}}", "docker.io/"+env.DOCKER_USERNAME+"/multibot-tenant:latest")
 	text = strings.ReplaceAll(text, "{{IMAGE_PULL_POLICY}}", env.IMAGE_PULL_POLICY)
 	text = strings.ReplaceAll(text, "{{CHANNEL}}", channel)
 

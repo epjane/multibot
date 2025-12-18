@@ -6,12 +6,12 @@ toolchain go1.23.5
 
 require (
 	github.com/TwiN/go-away v1.6.14
-	github.com/abhinavxd/youtube-live-chat-downloader/v2 v2.0.3
 	github.com/gempir/go-twitch-irc/v4 v4.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/johanvandegriff/kick-chat-wrapper v0.0.1
+	github.com/johanvandegriff/youtube-live-chat-downloader/v2 v2.1.1
 	github.com/redis/go-redis/v9 v9.7.0
 	golang.org/x/oauth2 v0.25.0
 	k8s.io/api v0.32.1

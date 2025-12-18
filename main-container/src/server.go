@@ -360,7 +360,7 @@ func main() {
 	router.HandleFunc("/api/logout", logoutHandler)
 	router.HandleFunc("/", indexHandler)
 
-	// Tell the router to use that file server for all /static/* paths
+	// Tell the router to use that file server for all /api/static/* paths
 	router.PathPrefix("/api/static/").Handler(http.StripPrefix("/api/static/", http.FileServer(http.Dir("./static"))))
 
 	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {

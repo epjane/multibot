@@ -213,7 +213,7 @@ func getUserPronouns(username string) string {
 }
 
 func fetchPronouns(username string) {
-	// https://pronouns.alejo.io/api/users/<username> => e.g. [{"id":"501240813","login":"jjvanvan","pronoun_id":"any"}]
+	// https://pronouns.alejo.io/api/users/<username> => e.g. [{"id":"501240813","login":"epjane","pronoun_id":"sheher"}]
 	url := fmt.Sprintf("https://pronouns.alejo.io/api/users/%s", strings.ToLower(username))
 	resp, err := http.Get(url)
 	if err != nil {
