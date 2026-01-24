@@ -215,7 +215,11 @@ func handleCommand(msg twitch.PrivateMessage, username string) (bool, bool) {
 		switch {
 		case command == "!help" || command == "!commands":
 			validCommand = true
-			Say(`commands: !nick - set your nickname; !botpage - link to the page with nicknames and other info; !multichat - link to combined chat; !clear - clear the multichat`)
+			commands := `!botpage - link to the page with nicknames and other info; !multichat - link to combined chat; !clear - clear the multichat`
+			if feature_toggle_nicknames {
+				commands = `!nick - set your nickname; ` + commands
+			}
+			Say(`commands: ` + commands)
 		case command == "!botpage":
 			validCommand = true
 			Say(fmt.Sprintf("see the nicknames and other bot info at %s/%s", env.BASE_URL, env.TWITCH_CHANNEL))
@@ -287,9 +291,10 @@ func greetz(username string, validCommand, shouldReply bool) {
 	if strings.EqualFold(username, env.TWITCH_BOT_USERNAME) {
 		return
 	}
-	// Only greet if the user has a nickname set (like in Node).
+	// Don't greet if the user has no nickname, or if nicknames are disabled.
 	nick := props.GetViewerProp(nil, username, "nickname")
-	if nick == nil {
+	feature_toggle_nicknames := props.GetChannelProp(nil, "feature_toggle_nicknames").(bool)
+	if nick == nil || !feature_toggle_nicknames {
 		return
 	}
 
