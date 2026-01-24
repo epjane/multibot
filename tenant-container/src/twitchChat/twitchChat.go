@@ -200,57 +200,73 @@ func DisconnectFromTwitch() {
 }
 
 func handleCommand(msg twitch.PrivateMessage, username string) (bool, bool) {
-	command := strings.ReplaceAll(msg.Message, " 󠀀", " ")
+	command := msg.Message
+	//7tv adds random invisible chars to get around the repetition restriction
+	command = strings.ReplaceAll(command, " 󠀀", " ")
+	command = strings.ReplaceAll(command, " ͏", " ")
 	command = strings.TrimSpace(command)
-	validCommand := true
+
+	validCommand := false
 	shouldReply := true
 
-	switch {
-	case command == "!help" || command == "!commands":
-		Say(`commands: !nick - set your nickname; !botpage - link to the page with nicknames and other info; !multichat - link to combined chat; !clear - clear the multichat`)
-	case command == "!botpage":
-		Say(fmt.Sprintf("see the nicknames and other bot info at %s/%s", env.BASE_URL, env.TWITCH_CHANNEL))
-	case command == "!multichat":
-		Say(fmt.Sprintf("see the multichat at %s/%s/chat (change font and show/hide options on !botpage)", env.BASE_URL, env.TWITCH_CHANNEL))
-	case command == "!clear":
-		// Only allow if user is mod, broadcaster, or super admin
-		if msg.User.IsMod || strings.EqualFold(msg.User.Name, env.TWITCH_CHANNEL) || strings.EqualFold(msg.User.Name, env.TWITCH_SUPER_ADMIN_USERNAME) {
-			multiChat.ClearChat()
-			shouldReply = false
-		} else {
-			Say(fmt.Sprintf("@%s you do not have permission to clear chat", username))
+	feature_toggle_nicknames := props.GetChannelProp(nil, "feature_toggle_nicknames").(bool)
+	feature_toggle_chat_commands := props.GetChannelProp(nil, "feature_toggle_chat_commands").(bool)
+	if feature_toggle_chat_commands {
+		switch {
+		case command == "!help" || command == "!commands":
+			validCommand = true
+			Say(`commands: !nick - set your nickname; !botpage - link to the page with nicknames and other info; !multichat - link to combined chat; !clear - clear the multichat`)
+		case command == "!botpage":
+			validCommand = true
+			Say(fmt.Sprintf("see the nicknames and other bot info at %s/%s", env.BASE_URL, env.TWITCH_CHANNEL))
+		case command == "!multichat":
+			validCommand = true
+			Say(fmt.Sprintf("see the multichat at %s/%s/chat (change font and show/hide options on !botpage)", env.BASE_URL, env.TWITCH_CHANNEL))
+		case command == "!clear":
+			validCommand = true
+			// Only allow if user is mod, broadcaster, or super admin
+			if msg.User.IsMod || strings.EqualFold(msg.User.Name, env.TWITCH_CHANNEL) || strings.EqualFold(msg.User.Name, env.TWITCH_SUPER_ADMIN_USERNAME) {
+				multiChat.ClearChat()
+				shouldReply = false
+			} else {
+				Say(fmt.Sprintf("@%s you do not have permission to clear chat", username))
+			}
 		}
-	case command == "!nick":
-		curr := props.GetViewerProp(nil, username, "nickname")
-		if curr != nil {
-			props.SetViewerProp(nil, username, "nickname", nil)
-			Say(fmt.Sprintf("@%s removed nickname, sad to see you go", username))
-		} else {
-			Say(fmt.Sprintf("@%s please provide a nickname, e.g. !nick name", username))
-		}
-	case strings.HasPrefix(command, "!nick "):
-		parts := strings.SplitN(command, " ", 2)
-		if len(parts) < 2 {
-			Say(fmt.Sprintf("@%s please provide a nickname after !nick", username))
-			break
-		}
-		nickname := strings.TrimSpace(parts[1])
-		maxLen := props.GetChannelPropAs(nil, "max_nickname_length", 0)
+		if feature_toggle_nicknames {
+			switch {
+			case command == "!nick":
+				validCommand = true
+				curr := props.GetViewerProp(nil, username, "nickname")
+				if curr != nil {
+					props.SetViewerProp(nil, username, "nickname", nil)
+					Say(fmt.Sprintf("@%s removed nickname, sad to see you go", username))
+				} else {
+					Say(fmt.Sprintf("@%s please provide a nickname, e.g. !nick name", username))
+				}
+			case strings.HasPrefix(command, "!nick "):
+				validCommand = true
+				parts := strings.SplitN(command, " ", 2)
+				if len(parts) < 2 {
+					Say(fmt.Sprintf("@%s please provide a nickname, e.g. !nick name", username))
+					break
+				}
+				nickname := strings.TrimSpace(parts[1])
+				maxLen := props.GetChannelPropAs(nil, "max_nickname_length", 0)
 
-		if goaway.IsProfane(nickname) {
-			Say(fmt.Sprintf("@%s no profanity allowed in nickname, choose a different one", username))
-		} else if props.GetViewerProp(nil, username, "nickname") == nickname {
-			Say(fmt.Sprintf("@%s you already have that nickname", username))
-		} else if len(nickname) > maxLen {
-			Say(fmt.Sprintf("@%s nickname \"%s\" is too long, max length = %d", username, nickname, maxLen))
-		} else if isNicknameTaken(nickname) {
-			Say(fmt.Sprintf("@%s nickname \"%s\" is already taken, see !botpage for the list", username, nickname))
-		} else {
-			props.SetViewerProp(nil, username, "nickname", nickname)
-			Say(fmt.Sprintf("@%s set nickname to %s", username, nickname))
+				if goaway.IsProfane(nickname) {
+					Say(fmt.Sprintf("@%s no profanity allowed in nickname, choose a different one", username))
+				} else if props.GetViewerProp(nil, username, "nickname") == nickname {
+					Say(fmt.Sprintf("@%s you already have that nickname", username))
+				} else if len(nickname) > maxLen {
+					Say(fmt.Sprintf("@%s nickname \"%s\" is too long, max length = %d", username, nickname, maxLen))
+				} else if isNicknameTaken(nickname) {
+					Say(fmt.Sprintf("@%s nickname \"%s\" is already taken, see !botpage for the list", username, nickname))
+				} else {
+					props.SetViewerProp(nil, username, "nickname", nickname)
+					Say(fmt.Sprintf("@%s set nickname to %s", username, nickname))
+				}
+			}
 		}
-	default:
-		validCommand = false
 	}
 	return validCommand, shouldReply
 }

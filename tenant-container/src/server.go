@@ -123,6 +123,7 @@ func main() {
 		),
 	)
 
+	router.HandleFunc("/channel_props", getChannelPropsHandler).Methods("GET")
 	router.HandleFunc("/channel_props/{prop_name}", getChannelPropHandler).Methods("GET")
 	router.Handle("/channel_props/{prop_name}", channelAuthMiddleware(http.HandlerFunc(setChannelPropHandler))).Methods("POST")
 
@@ -255,6 +256,12 @@ func respondJSON(w http.ResponseWriter, data interface{}) {
 // -----------------------------------------------------------------------------
 //  Channel/viewer props
 // -----------------------------------------------------------------------------
+
+func getChannelPropsHandler(w http.ResponseWriter, r *http.Request) {
+	val := props.GetChannelProps(r.Context())
+	b, _ := json.Marshal(val)
+	w.Write(b)
+}
 
 func getChannelPropHandler(w http.ResponseWriter, r *http.Request) {
 	propName := mux.Vars(r)["prop_name"]

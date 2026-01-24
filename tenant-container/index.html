@@ -333,25 +333,34 @@
                         <button @click="check_status('emotes')">check 3rd party emotes status</button>
                         <button @click="clear_chat">clear chat</button>
                     </p>
-                    <h2>Forward Commands from Youtube to Twitch</h2>
-                    <ul>
-                        <li v-for="cmd, i in channel_props_edit.fwd_cmds_yt_twitch">
-                            <span v-if="editing_fwd_idx === i">
-                                <input type="text" v-model="editing_fwd_item" />
-                                <button
-                                    @click="channel_props_edit.fwd_cmds_yt_twitch[i] = editing_fwd_item; editing_fwd_idx = undefined; save_channel_prop('fwd_cmds_yt_twitch')">done</button>
-                            </span>
-                            <span v-else class="edit" v-if="is_auth"
-                                @click="editing_fwd_idx = i; editing_fwd_item = cmd">✎ [[cmd]]
-                            </span>
-                            <span class="delete"
-                                @click="channel_props_edit.fwd_cmds_yt_twitch.splice(i, 1); save_channel_prop('fwd_cmds_yt_twitch')">
-                                ⓧ</span>
-                        </li>
-                        <li><button
-                                @click="channel_props_edit.fwd_cmds_yt_twitch.push(new_cmd); new_cmd = ''; save_channel_prop('fwd_cmds_yt_twitch')">
-                                add new:</button><input type="text" v-model="new_cmd" /></li>
-                    </ul>
+                    <h2>Feature Toggles</h2>
+                    <label><input type="checkbox" v-model="channel_props_edit.feature_toggle_chat_commands"
+                            @change="save_channel_prop('feature_toggle_chat_commands')"> enable chat commands
+                    </label><br />
+                    <label><input type="checkbox" v-model="channel_props_edit.feature_toggle_nicknames"
+                            @change="save_channel_prop('feature_toggle_nicknames')"> enable nicknames
+                    </label><br />
+                    <span v-if="channel_props.feature_toggle_chat_commands">
+                        <h2>Forward Commands from Youtube to Twitch</h2>
+                        <ul>
+                            <li v-for="cmd, i in channel_props_edit.fwd_cmds_yt_twitch">
+                                <span v-if="editing_fwd_idx === i">
+                                    <input type="text" v-model="editing_fwd_item" />
+                                    <button
+                                        @click="channel_props_edit.fwd_cmds_yt_twitch[i] = editing_fwd_item; editing_fwd_idx = undefined; save_channel_prop('fwd_cmds_yt_twitch')">done</button>
+                                </span>
+                                <span v-else class="edit" v-if="is_auth"
+                                    @click="editing_fwd_idx = i; editing_fwd_item = cmd">✎ [[cmd]]
+                                </span>
+                                <span class="delete"
+                                    @click="channel_props_edit.fwd_cmds_yt_twitch.splice(i, 1); save_channel_prop('fwd_cmds_yt_twitch')">
+                                    ⓧ</span>
+                            </li>
+                            <li><button
+                                    @click="channel_props_edit.fwd_cmds_yt_twitch.push(new_cmd); new_cmd = ''; save_channel_prop('fwd_cmds_yt_twitch')">
+                                    add new:</button><input type="text" v-model="new_cmd" /></li>
+                        </ul>
+                    </span>
                 </span>
                 <span v-else>
                     <p class="alert gray-bg">
@@ -362,19 +371,19 @@
                     </p>
                 </span>
             </span>
-            <span v-if="channel && channels">
+            <span v-if="channel && channels && channel_props.feature_toggle_nicknames">
                 <h2>Nickname Ledger</h2>
                 <span v-if="channel === user?.login || is_super_admin">
-                    max nickname length: <input v-model="channel_props_edit.max_nickname_length" type="number"> <button
-                        @click="save_channel_prop('max_nickname_length')"
+                    max nickname length: <input v-model="channel_props_edit.max_nickname_length" type="number">
+                    <button @click="save_channel_prop('max_nickname_length')"
                         v-if="channel_props_edit.max_nickname_length !== channel_props.max_nickname_length"
                         class="red-bg rounded">save</button><br />
                     greetz threshold: <input v-model="channel_props_edit.greetz_threshold" type="number"> <button
                         @click="save_channel_prop('greetz_threshold')"
                         v-if="channel_props_edit.greetz_threshold !== channel_props.greetz_threshold"
                         class="red-bg rounded">save</button><br />
-                    greetz wb threshold: <input v-model="channel_props_edit.greetz_wb_threshold" type="number"> <button
-                        @click="save_channel_prop('greetz_wb_threshold')"
+                    greetz wb threshold: <input v-model="channel_props_edit.greetz_wb_threshold" type="number">
+                    <button @click="save_channel_prop('greetz_wb_threshold')"
                         v-if="channel_props_edit.greetz_wb_threshold !== channel_props.greetz_wb_threshold"
                         class="red-bg rounded">save</button><br />
                 </span>
@@ -558,22 +567,7 @@
                     enabled_grayed_out: false,
                     chat: [],
                     viewers: {},
-                    channel_props: {
-                        enabled: undefined,
-                        fwd_cmds_yt_twitch: undefined,
-                        max_nickname_length: undefined,
-                        greetz_threshold: undefined,
-                        greetz_wb_threshold: undefined,
-                        youtube_id: undefined,
-                        owncast_url: undefined,
-                        kick_username: undefined,
-                        kick_chatroom_id: undefined,
-                        show_usernames: undefined,
-                        show_nicknames: undefined,
-                        show_pronouns: undefined,
-                        text_shadow: undefined,
-                        font: undefined,
-                    },
+                    channel_props: {},
                     channel_props_edit: {},
                     editing_username: undefined,
                     editing_nickname: '',
@@ -930,7 +924,6 @@ ${text}`);
 
                     return null;
                 },
-
             },
             mounted() {
                 this.websocket_connect();
@@ -943,9 +936,15 @@ ${text}`);
                         json.forEach(msg => this.websocket_chat(msg));
                     });
 
-                for (const prop_name of Object.keys(this.channel_props)) {
-                    this.get_channel_prop(prop_name);
-                }
+                fetch(`/{{.channel}}/channel_props`)
+                    .then(res => res.json())
+                    .then(json => {
+                        console.log(json);
+                        for (const prop_name of Object.keys(json)) {
+                            this.channel_props[prop_name] = json[prop_name];
+                            this.channel_props_edit[prop_name] = json[prop_name];
+                        }
+                    });
             },
             watch: {
                 channel(new_channel, old_channel) {

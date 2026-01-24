@@ -118,7 +118,7 @@
 
 <body id="app">
     <div id="container">
-        <div id="login" v-if="!is_chat_fullscreen">
+        <div id="login">
             <span v-if="is_logged_in">
                 <a v-if="user?.login !== channel && is_onboarded" :href="'/' + user?.login"><img :src="user?.profile_image_url" /></a>
                 <img v-else :src="user?.profile_image_url" />

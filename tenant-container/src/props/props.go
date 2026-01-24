@@ -16,21 +16,23 @@ import (
 
 var (
 	DEFAULT_CHANNEL_PROPS = map[string]interface{}{
-		"enabled":             true,
-		"did_first_run":       false,
-		"fwd_cmds_yt_twitch":  []string{"!sr", "!test"},
-		"max_nickname_length": 20,
-		"greetz_threshold":    (5 * time.Hour).Milliseconds(),
-		"greetz_wb_threshold": (45 * time.Minute).Milliseconds(),
-		"youtube_id":          "",
-		"owncast_url":         "",
-		"kick_username":       "",
-		"kick_chatroom_id":    "",
-		"show_usernames":      true, // Whether to show certain data in the rendered chat
-		"show_nicknames":      true,
-		"show_pronouns":       true,
-		"text_shadow":         "1px 1px 2px black",
-		"font":                `"Cabin", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif`,
+		"enabled":                      true,
+		"did_first_run":                false,
+		"fwd_cmds_yt_twitch":           []string{"!sr", "!test"},
+		"max_nickname_length":          20,
+		"greetz_threshold":             (5 * time.Hour).Milliseconds(),
+		"greetz_wb_threshold":          (45 * time.Minute).Milliseconds(),
+		"youtube_id":                   "",
+		"owncast_url":                  "",
+		"kick_username":                "",
+		"kick_chatroom_id":             "",
+		"show_usernames":               true, // Whether to show certain data in the rendered chat
+		"show_nicknames":               true,
+		"show_pronouns":                true,
+		"text_shadow":                  "1px 1px 2px black",
+		"font":                         `"Cabin", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif`,
+		"feature_toggle_nicknames":     true,
+		"feature_toggle_chat_commands": true,
 	}
 	DEFAULT_VIEWER_PROPS = map[string]interface{}{
 		"nickname":      nil,
@@ -68,24 +70,55 @@ func ListViewers(ctx context.Context) []string {
 	return viewers
 }
 
+func GetChannelProps(ctx context.Context) any {
+	allPropNames := make([]string, 0)
+	allKeys := make([]string, 0)
+	for propName := range DEFAULT_CHANNEL_PROPS {
+		allPropNames = append(allPropNames, propName)
+		allKeys = append(allKeys, channelPropKey(propName))
+	}
+	allPropValues, err := redisClient.MGet(ctx, allKeys...).Result()
+	if err == redis.Nil || err != nil {
+		return DEFAULT_CHANNEL_PROPS
+	}
+
+	out := make(map[string]interface{}, 0)
+	log.Println(allPropValues)
+	for i, propName := range allPropNames {
+		propValue := allPropValues[i]
+		if propValue != nil {
+			out[propName] = tryUnmarshalProp(propName, propValue.(string))
+		} else {
+			out[propName] = getDefaultPropVal(propName)
+		}
+	}
+	log.Println(out)
+	return out
+}
+
 func GetChannelProp(ctx context.Context, propName string) any {
 	val, err := redisClient.Get(ctx, channelPropKey(propName)).Result()
 	if err == redis.Nil || err != nil {
-		if defVal, ok := DEFAULT_CHANNEL_PROPS[propName]; ok {
-			return defVal
-		}
-		return nil
+		return getDefaultPropVal(propName)
 	}
+	return tryUnmarshalProp(propName, val)
+}
+
+func tryUnmarshalProp(propName string, val string) interface{} {
 	var out any
 	if err := json.Unmarshal([]byte(val), &out); err != nil {
 		log.Printf("[prop] Failed to unmarshal property %s: %v", propName, err)
 		// If unmarshaling fails, use default if available
-		if defVal, ok := DEFAULT_CHANNEL_PROPS[propName]; ok {
-			return defVal
-		}
-		return nil
+		return getDefaultPropVal(propName)
 	}
 	return out
+}
+
+func getDefaultPropVal(propName string) interface{} {
+	if defVal, ok := DEFAULT_CHANNEL_PROPS[propName]; ok {
+		return defVal
+	}
+	return nil
 }
 
 func GetChannelPropAs[T int | int64 | float64](ctx context.Context, propName string, defaultValue T) T {
