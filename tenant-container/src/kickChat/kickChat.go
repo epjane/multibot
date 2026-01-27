@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	kickchatwrapper "github.com/johanvandegriff/kick-chat-wrapper"
+	kickchatwrapper "github.com/epjane/kick-chat-wrapper"
 
 	"multibot/tenant-container/src/multiChat"
 	"multibot/tenant-container/src/props"

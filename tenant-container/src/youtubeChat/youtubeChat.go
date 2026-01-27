@@ -9,7 +9,7 @@ import (
 	"time"
 
 	goaway "github.com/TwiN/go-away"
-	YtChat "github.com/johanvandegriff/youtube-live-chat-downloader/v2"
+	YtChat "github.com/epjane/youtube-live-chat-downloader/v2"
 
 	"multibot/tenant-container/src/multiChat"
 	"multibot/tenant-container/src/props"

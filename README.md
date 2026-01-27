@@ -7,7 +7,7 @@ This is a livestream bot with multiple functions:
 * nicknames - chat members can set a nickname for the bot to greet them with
 * admin page - log in with twitch to access your admin settings, specify which commands to forward, set up multichat, and change nicknames manually
 * coming soon: chatbot - the bot will also reply when mentioned or replied to
-* coming soon: livestream splitting - point OBS to this and have it forward the stream to twitch, youtube, owncast, etc. For now, you can use [this](https://codeberg.org/johanvandegriff/multistream) if you know how to use docker.
+* coming soon: livestream splitting - point OBS to this and have it forward the stream to twitch, youtube, owncast, etc. For now, you can use [this](https://codeberg.org/epjane/multistream) if you know how to use docker.
 * coming soon: OBS hosting - run OBS in the cloud, good if you have a bad connection, such as IRL streams
 
 ## Add to Your Channel
@@ -56,7 +56,7 @@ Keep those pages open, in the next section we will create a file to paste the cr
 ### Add Credentials to the Bot
 Clone the bot repo and create a file called `.env.local`:
 ```bash
-git clone https://codeberg.org/johanvandegriff/multibot.git
+git clone https://codeberg.org/epjane/multibot.git
 cd mutibot
 nano .env.local
 ```
