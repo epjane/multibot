@@ -30,6 +30,8 @@ fi
 docker build -t "$DOCKER_USERNAME/multibot-main:$docker_tag" -t "$DOCKER_USERNAME/multibot-main:latest" -f main-container/Dockerfile .
 docker build -t "$DOCKER_USERNAME/multibot-tenant:$docker_tag" -t "$DOCKER_USERNAME/multibot-tenant:latest" -f tenant-container/Dockerfile .
 
+docker push "$DOCKER_USERNAME/multibot-main:$docker_tag"
+docker push "$DOCKER_USERNAME/multibot-tenant:$docker_tag"
 docker push "$DOCKER_USERNAME/multibot-main:latest"
 docker push "$DOCKER_USERNAME/multibot-tenant:latest"
 

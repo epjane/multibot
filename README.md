@@ -11,7 +11,7 @@ This is a livestream bot with multiple functions:
 * coming soon: OBS hosting - run OBS in the cloud, good if you have a bad connection, such as IRL streams
 
 ## Add to Your Channel
-Go to https://botbot.jjv.sh and click on "log in" at the top right. It will say `JJBotBot wants to access your account` (note that it only asks for permission to view your email and nothing else, so there is no way for it to change anything on your twitch account), click Authorize. Once you log in, click `sign up`, and after a few seconds it will redirect to your channel page.
+Go to https://botbot.jjv.sh and click on "log in" at the top right. It will say `epjbot wants to access your account` (note that it only asks for permission to view your email and nothing else, so there is no way for it to change anything on your twitch account), click Authorize. Once you log in, click `sign up`, and after a few seconds it will redirect to your channel page.
 
 You are done! Chat members will now be able to type `!nick mynickname` to pick a nickname, and `!botpage` to pull up the webpage with all the nicknames. The bot will greet users who enter the chat by their nicknames.
 
@@ -25,7 +25,7 @@ For youtube, enter your youtube channel where it says `enter youtube channel URL
 To add the multichat to OBS, type `!multichat` in your twitch chat and the bot will reply with a link you can add to an OBS browser source. If you want to change the settings, then go to the bot page and change the `show usernames` and `show nicknames` checkboxes as desired, then copy the `pop-out` chat link near the top right of the page and add that to your OBS browser source instead.
 
 ### (Optional) Mod the Bot
-Sometimes when there are a lot of users running commands, the bot sends messages too quickly and twitch doesn't display all of them. You can fix this by making the bot a moderator by typing `/mod JJBotBot` in chat. This is optional, but will avoid missing any messages.
+Sometimes when there are a lot of users running commands, the bot sends messages too quickly and twitch doesn't display all of them. You can fix this by making the bot a moderator by typing `/mod epjbot` in chat. This is optional, but will avoid missing any messages.
 
 # Technical Info for Nerds
 Everything past this point is completely optional and geared towards programmers, going into detail on how to run a copy of the bot locally, deploy it to kubernetes in the cloud, and modify the code to do whatever you want.
@@ -38,7 +38,7 @@ Version 3 is rewritten from nodejs to golang, to be more efficient, especially u
 
 ## Running Locally in Docker
 You will need:
-* **a twitch account for the bot**: The bot works by logging into a normal twitch account, which just happens to have the username `JJBotBot` for my setup, and reading and posting messages in the chat. So I recommend creating a new account for the bot, but you can use your own twitch account if you want it to post messages as your username.
+* **a twitch account for the bot**: The bot works by logging into a normal twitch account, which just happens to have the username `epjbot` for my setup, and reading and posting messages in the chat. So I recommend creating a new account for the bot, but you can use your own twitch account if you want it to post messages as your username.
 * **a linux environment**: (might work on windows/mac but havent tested, if you do get it working let me know)
 * **git**: `sudo apt install git` or download from https://git-scm.com/
 * **golang**: `sudo apt install golang-go` or download from https://go.dev/
