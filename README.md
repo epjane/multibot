@@ -1,5 +1,5 @@
 # multibot
-[botbot.jjv.sh](https://botbot.jjv.sh)
+[multibot.jjv.sh](https://multibot.jjv.sh)
 
 This is a livestream bot with multiple functions:
 * aggregate chat - pull chat from twitch, youtube, owncast, and kick into a common chat page
@@ -11,7 +11,7 @@ This is a livestream bot with multiple functions:
 * coming soon: OBS hosting - run OBS in the cloud, good if you have a bad connection, such as IRL streams
 
 ## Add to Your Channel
-Go to https://botbot.jjv.sh and click on "log in" at the top right. It will say `epjbot wants to access your account` (note that it only asks for permission to view your email and nothing else, so there is no way for it to change anything on your twitch account), click Authorize. Once you log in, click `sign up`, and after a few seconds it will redirect to your channel page.
+Go to https://multibot.jjv.sh and click on "log in" at the top right. It will say `epjbot wants to access your account` (note that it only asks for permission to view your email and nothing else, so there is no way for it to change anything on your twitch account), click Authorize. Once you log in, click `sign up`, and after a few seconds it will redirect to your channel page.
 
 You are done! Chat members will now be able to type `!nick mynickname` to pick a nickname, and `!botpage` to pull up the webpage with all the nicknames. The bot will greet users who enter the chat by their nicknames.
 
@@ -30,7 +30,7 @@ Sometimes when there are a lot of users running commands, the bot sends messages
 # Technical Info for Nerds
 Everything past this point is completely optional and geared towards programmers, going into detail on how to run a copy of the bot locally, deploy it to kubernetes in the cloud, and modify the code to do whatever you want.
 
-This code is open source (AGPL-3.0 license), so you don't have to use my server at https://botbot.jjv.sh and instead you can choose to deploy the code to your own server. (Side note: the license also allows you to make  any changes you want to the code, provided you release your source code under the same license as well.)
+This code is open source (AGPL-3.0 license), so you don't have to use my server at https://multibot.jjv.sh and instead you can choose to deploy the code to your own server. (Side note: the license also allows you to make  any changes you want to the code, provided you release your source code under the same license as well.)
 
 Version 2 is rewritten with a different architecture to allow separating each streamer into their own tenant instance for better scalability. This also makes it easier to add new high power features in the future such as livestream splitting, by creating an extra container for an individual tenant that just does the RTMP multicasting.
 
@@ -96,9 +96,9 @@ Make sure to save with Ctrl-S and exit nano with Ctrl-X.
 ### Run the Docker Container
 Then do `./run-compose.sh` to build and run the various containers in docker.
 
-Navigate to `http://localhost:8000` in your browser to see the app. The main page is hosted by `main-container`, which also has a router that proxys the streamer pages to the individual instances of `tenant-container`. They share data such as login sessions through a redis `state-db` container. When deploying, it is important to note that the main container can have replicas, but each tenant container can only have 1 instance because of the nature of the live chat connections.
+Navigate to `http://localhost:8000` in your browser to see the app. The main page is hosted by `main-container`, which also has a router that proxys the streamer pages to the individual instances of `tenant-container`. They share data such as login sessions through a valkey `state-db` container. When deploying, it is important to note that the main container can have replicas, but each tenant container can only have 1 instance because of the nature of the live chat connections.
 
-After you have run it once with `./run-compose.sh`, you can use `./run-go.sh` to run it with golang directly (redis still runs in docker, but that never needs to be rebuilt) which is faster for testing small changes.
+After you have run it once with `./run-compose.sh`, you can use `./run-go.sh` to run it with golang directly (valkey still runs in docker, but that never needs to be rebuilt) which is faster for testing small changes.
 
 Running the app with docker or go directly has some limitations - it is hardcoded to run only on certain twitch channels, and the sign up function will not work since it has no way of creating more instances while running this way. If you want to use different channels, replace `epjane` and `minecraft1167890` in `run-go.sh` and/or `compose.yaml`, or follow the next section to run it locally in kubernetes.
 
@@ -134,7 +134,7 @@ TWITCH_BOT_OAUTH_TOKEN=same as .env.local
 TWITCH_CLIENT_ID=same as .env.local
 TWITCH_SECRET=same as .env.local
 DOCKER_USERNAME=same as .env.local
-KUBECONFIG=/home/user/Downloads/jjbotbot-k8s-cluster-kubeconfig.yaml
+KUBECONFIG=/home/user/Downloads/multik8s-cluster-kubeconfig.yaml
 ```
 
 For `EMAIL_ADDRESS`, put your email address. This will be used to send emails about SSL certificates renewing.
@@ -146,33 +146,33 @@ Go back to the twitch app page: https://dev.twitch.tv/console/apps
 And add `https://your.domain.com/api/auth/twitch/callback` as a URL, making sure to use the your domain or subdomain.
 
 Install kubectl. On Ubuntu, this is `sudo snap install kubectl --classic`
-Create a digitalocean kubernetes (k8s) cluster, I put it in the NYC3 region and called it `jjbotbot-k8s-node-pool` for the node pool name and `jjbotbot-k8s-cluster` for the cluster name. I selected the cheapest plan for now, but with autoscaling enabled so that it can handle more users if needed. Go through the getting started steps:
-* Connecting to Kubernetes - Choose manual, then click `download the cluster configuration file`, then run `kubectl --kubeconfig=~/Downloads/jjbotbot-k8s-cluster-kubeconfig.yaml get nodes` to make sure it can connect.
+Create a digitalocean kubernetes (k8s) cluster, I put it in the NYC3 region and called it `multik8s-node-pool` for the node pool name and `multik8s-cluster` for the cluster name. I selected the cheapest plan for now, but with autoscaling enabled so that it can handle more users if needed. Go through the getting started steps:
+* Connecting to Kubernetes - Choose manual, then click `download the cluster configuration file`, then run `kubectl --kubeconfig=~/Downloads/multik8s-cluster-kubeconfig.yaml get nodes` to make sure it can connect.
 
 Replace `KUBECONFIG` in `.env.prod` with the path to the config file you downloaded.
 
 For autoscaling, we need the metrics server, go [here](https://marketplace.digitalocean.com/apps/kubernetes-metrics-server) and click "Install App" (as instructed on the [autoscaling](https://docs.digitalocean.com/products/kubernetes/how-to/set-up-autoscaling/) guide).
 
-Create a digitalocean (or whatever cloud provider you use) redis cluster in the same region, I called it `jjbotbot-redis` and go through the getting started steps:
+Create a digitalocean (or whatever cloud provider you use) valkey cluster in the same region (I called it `multik8s-valkey`) and go through the getting started steps:
 * Restrict inbound connections to only the k8s cluster and node pool
-* Set the eviction policy to `noeviction` to make it not throw away data when the memory limit is reached. We are using redis as more of a key value store instead of a cache, so we don't want to lose data
+* IMPORTANT! Set the eviction policy to `noeviction` to make it not throw away data when the memory limit is reached. We are using valkey as more of a key value store instead of a cache, so we don't want to lose data
 * Copy the connection details for VPC network to give to k8s later
 
 Add the info from your connection details to `.env.prod`. For example if your connection details look like this:
 ```
 username = default
 password = xxxxxxxxxxxx
-host = jjbotbot-redis-do-user-0000000-0.f.db.ondigitalocean.com
+host = multik8s-valkey-do-user-0000000-0.f.db.ondigitalocean.com
 port = 25061
 ```
 Then the relevant entries in `.env.prod` should look like this (note that the port becomes part of the connection string, and you add `rediss://` at the beginning):
 ```
-STATE_DB_URL=rediss://private-jjbotbot-redis-do-user-0000000-0.f.db.ondigitalocean.com:25061
+STATE_DB_URL=rediss://private-multik8s-valkey-do-user-0000000-0.f.db.ondigitalocean.com:25061
 STATE_DB_PASSWORD=xxxxxxxxxxxx
 ```
 
 Run `./deploy-k8s-cloud.sh` which will build and push the docker images, deploy the app, add a load balancer, and configure HTTPS certs for your domain (once the DNS is added in the next step).
 
-Go to the load balancers in your cloud provider's UI and find the IP address, or use `kubectl --kubeconfig=$HOME/Downloads/jjbotbot-k8s-cluster-kubeconfig.yaml get -n ingress-nginx service` and find the EXTERNAL-IP of the LoadBalancer entry. Then go to your domain name and add an "A" record with that IP address to a domain or subdomain that you own, which should match `BASE_URL` in `.env.prod` (I used `botbot.jjv.sh`).
+Go to the load balancers in your cloud provider's UI and find the IP address, or use `kubectl --kubeconfig=$HOME/Downloads/multik8s-cluster-kubeconfig.yaml get -n ingress-nginx service` and find the EXTERNAL-IP of the LoadBalancer entry. Then go to your domain name and add an "A" record with that IP address to a domain or subdomain that you own, which should match `BASE_URL` in `.env.prod` (I used `multibot.jjv.sh`).
 
-It may take a few minutes for the cert to be issued, you can check the progress with `kubectl --kubeconfig=$HOME/Downloads/jjbotbot-k8s-cluster-kubeconfig.yaml describe certificate letsencrypt-prod`. After it is done you should be able to go to your domain/subdomain (`botbot.jjv.sh` for me) and see the app running!
+It may take a few minutes for the cert to be issued, you can check the progress with `kubectl --kubeconfig=$HOME/Downloads/multik8s-cluster-kubeconfig.yaml describe certificate letsencrypt-prod`. After it is done you should be able to go to your domain/subdomain (`multibot.jjv.sh` for me) and see the app running!

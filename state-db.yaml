@@ -19,8 +19,8 @@ spec:
     spec:
       containers:
       - name: state-db
-        image: "redis:alpine"
-        command: ["redis-server", "--requirepass", "$(STATE_DB_PASSWORD)"]
+        image: "valkey/valkey:alpine"
+        command: ["valkey-server", "--requirepass", "$(STATE_DB_PASSWORD)"]
         env:
         - name: STATE_DB_PASSWORD
           valueFrom:

@@ -1,13 +1,11 @@
 services:
   state-db:
-    image: "redis:alpine"
-    command: redis-server --requirepass ${STATE_DB_PASSWORD}
+    image: "valkey/valkey:alpine"
+    command: valkey-server --requirepass ${STATE_DB_PASSWORD}
     networks:
       - botnet
     ports:
       - 6379:6379
-    environment:
-      - REDIS_REPLICATION_MODE=master
 
   main-container:
     image: ${DOCKER_USERNAME}/multibot-main
