@@ -124,7 +124,6 @@ Make sure to add your cloud provider's nameservers, for example I logged into na
 Create a file `.env.prod`, which we can fill in most of it now:
 ```
 BASE_URL=https://your.subdomain.or.domain.com
-EMAIL_ADDRESS=your-email@example.com
 STATE_DB_URL=leave blank for now
 STATE_DB_PASSWORD=leave blank for now
 SESSION_SECRET=another random string
@@ -136,8 +135,6 @@ TWITCH_SECRET=same as .env.local
 DOCKER_USERNAME=same as .env.local
 KUBECONFIG=/home/user/Downloads/multik8s-cluster-kubeconfig.yaml
 ```
-
-For `EMAIL_ADDRESS`, put your email address. This will be used to send emails about SSL certificates renewing.
 
 For `BASE_URL`, put your domain or subdomain, including the `https://`, and make sure there is NO slash at the end.
 
@@ -171,7 +168,9 @@ STATE_DB_URL=rediss://private-multik8s-valkey-do-user-0000000-0.f.db.ondigitaloc
 STATE_DB_PASSWORD=xxxxxxxxxxxx
 ```
 
-Run `./deploy-k8s-cloud.sh` which will build and push the docker images, deploy the app, add a load balancer, and configure HTTPS certs for your domain (once the DNS is added in the next step).
+Clone [this repo](https://codeberg.org/epjane/multik8s) and follow the steps within to set up the cluster with all the settings it needs to issue SSL certs for HTTPS. These generally only need to be run once (not every time you deploy) which is why I broke it out into its own repo.
+
+Run `./deploy-k8s-cloud.sh` which will build and push the docker images, deploy the app, add a load balancer, and configure SSL certs for your domain (once the DNS is added in the next step).
 
 Go to the load balancers in your cloud provider's UI and find the IP address, or use `kubectl --kubeconfig=$HOME/Downloads/multik8s-cluster-kubeconfig.yaml get -n ingress-nginx service` and find the EXTERNAL-IP of the LoadBalancer entry. Then go to your domain name and add an "A" record with that IP address to a domain or subdomain that you own, which should match `BASE_URL` in `.env.prod` (I used `multibot.jjv.sh`).
 

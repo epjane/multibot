@@ -54,60 +54,6 @@ set -x #show commands again
 kubectl -n $ns apply -f app-secrets.yaml
 rm app-secrets.yaml
 
-# https://cert-manager.io/docs/tutorials/acme/nginx-ingress/
-# https://dev.to/chrisme/setting-up-nginx-ingress-w-automatically-generated-letsencrypt-certificates-on-kubernetes-4f1k
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.14.1/deploy/static/provider/cloud/deploy.yaml
-
-kubectl create namespace cert-manager || :
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.19.2/cert-manager.yaml
-
-while kubectl -n cert-manager get deployment | grep ' 0 '; do
-  sleep 1
-done
-sleep 1
-
-# patch it to add resource limits:
-for deployment in cert-manager cert-manager-cainjector cert-manager-webhook; do
-  kubectl patch deployment $deployment -n cert-manager \
-    --type='json' -p='[
-      {
-        "op": "add",
-        "path": "/spec/template/spec/containers/0/resources",
-        "value": {
-          "requests": {
-            "cpu": "25m",
-            "memory": "16Mi"
-          },
-          "limits": {
-            "cpu": "100m",
-            "memory": "256Mi"
-          }
-        }
-      }
-    ]'
-done
-
-#resolve DO operational readiness check:
-#Validating webhook with a TimeoutSeconds value smaller than 1 second or greater than 29 seconds will block upgrades.
-kubectl patch mutatingwebhookconfiguration cert-manager-webhook \
-  --type='json' -p='[
-    {
-      "op": "add",
-      "path": "/webhooks/0/timeoutSeconds",
-      "value": 10
-    }
-  ]'
-kubectl patch validatingwebhookconfiguration cert-manager-webhook \
-  --type='json' -p='[
-    {
-      "op": "add",
-      "path": "/webhooks/0/timeoutSeconds",
-      "value": 10
-    }
-  ]'
-
-cat prod-issuer.yaml | sed "s/{{EMAIL}}/$EMAIL_ADDRESS/g" | kubectl create -f - || :
-
 # kubectl -n $ns delete deployment main-container
 # kubectl -n $ns delete service main-container-svc
 # for deployment in $(kubectl -n $ns get deployments -o custom-columns=NAME:.metadata.name --no-headers -l group=tenant-containers); do
