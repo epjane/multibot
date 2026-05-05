@@ -298,37 +298,39 @@ func greetz(username string, validCommand, shouldReply bool) {
 		return
 	}
 
-	// Retrieve the last time we saw this user
-	lastSeensLock.Lock()
-	lastSeen, hasSeen := lastSeens[username]
 	nowMs := time.Now().UnixMilli()
-	lastSeensLock.Unlock()
+	if shouldReply {
+		// Retrieve the last time we saw this user
+		lastSeensLock.Lock()
+		lastSeen, hasSeen := lastSeens[username]
+		lastSeensLock.Unlock()
 
-	greetzThreshold := props.GetChannelPropAs(nil, "greetz_threshold", props.DEFAULT_CHANNEL_PROPS["greetz_threshold"].(int64))
-	wbThreshold := props.GetChannelPropAs(nil, "greetz_wb_threshold", props.DEFAULT_CHANNEL_PROPS["greetz_wb_threshold"].(int64))
+		greetzThreshold := props.GetChannelPropAs(nil, "greetz_threshold", props.DEFAULT_CHANNEL_PROPS["greetz_threshold"].(int64))
+		wbThreshold := props.GetChannelPropAs(nil, "greetz_wb_threshold", props.DEFAULT_CHANNEL_PROPS["greetz_wb_threshold"].(int64))
 
-	log.Println("[greetz]", lastSeen, "|", hasSeen, "|", nowMs, "|", greetzThreshold, "|", wbThreshold)
+		log.Println("[greetz]", lastSeen, "|", hasSeen, "|", nowMs, "|", greetzThreshold, "|", wbThreshold)
 
-	if !hasSeen || (nowMs-lastSeen > greetzThreshold) {
-		// They’ve been away a long time => use initial greet
-		if shouldReply && validCommand {
-			// If they typed a valid command, wait 2s, then greet with "also" variant
-			go func(u string) {
-				time.Sleep(GREETZ_DELAY_FOR_COMMAND)
-				Say(parseGreetz(GREETZ_ALSO, u))
-			}(username)
-		} else {
-			Say(parseGreetz(GREETZ, username))
-		}
-	} else if !hasSeen || (nowMs-lastSeen > wbThreshold) {
-		// They’ve been away for a shorter threshold => welcome back
-		if shouldReply && validCommand {
-			go func(u string) {
-				time.Sleep(GREETZ_DELAY_FOR_COMMAND)
-				Say(parseGreetz(GREETZ_WELCOME_BACK_ALSO, u))
-			}(username)
-		} else {
-			Say(parseGreetz(GREETZ_WELCOME_BACK, username))
+		if !hasSeen || nowMs-lastSeen > greetzThreshold {
+			// They’ve been away a long time => use initial greet
+			if validCommand {
+				// If they typed a valid command, wait 2s, then greet with "also" variant
+				go func(u string) {
+					time.Sleep(GREETZ_DELAY_FOR_COMMAND)
+					Say(parseGreetz(GREETZ_ALSO, u))
+				}(username)
+			} else {
+				Say(parseGreetz(GREETZ, username))
+			}
+		} else if !hasSeen || nowMs-lastSeen > wbThreshold {
+			// They’ve been away for a shorter threshold => welcome back
+			if validCommand {
+				go func(u string) {
+					time.Sleep(GREETZ_DELAY_FOR_COMMAND)
+					Say(parseGreetz(GREETZ_WELCOME_BACK_ALSO, u))
+				}(username)
+			} else {
+				Say(parseGreetz(GREETZ_WELCOME_BACK, username))
+			}
 		}
 	}
 
