@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e # exit when any error happens
+set -a # automatically export all variables
 source .env.local
+set +a
 set -x # show commands running
 
 export IMAGE_PULL_POLICY=IfNotPresent
@@ -48,10 +50,10 @@ kubectl -n $ns apply -f app-secrets.yaml
 rm app-secrets.yaml
 
 kubectl -n $ns apply -f state-db.yaml
+export IMAGE="docker.io/${DOCKER_USERNAME}/multibot-main:latest"
+export SERVICE_TYPE="LoadBalancer"
 cat main-container.yaml | \
-  sed "s,{{IMAGE}},docker.io/$DOCKER_USERNAME/multibot-main:latest,g" | \
-  sed "s,{{IMAGE_PULL_POLICY}},$IMAGE_PULL_POLICY,g" | \
-  sed "s,{{SERVICE_TYPE}},LoadBalancer,g" | \
+  envsubst '$IMAGE,$IMAGE_PULL_POLICY,$SERVICE_TYPE' | \
   kubectl -n $ns apply -f -
 
 while kubectl -n $ns get deployment | grep ' 0 '; do

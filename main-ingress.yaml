@@ -14,11 +14,11 @@ metadata:
 spec:
   tls:
   - hosts:
-    - {{DOMAIN_NAME}}
+    - ${DOMAIN_NAME}
     secretName: letsencrypt-prod
   ingressClassName: "nginx"
   rules:
-  - host: {{DOMAIN_NAME}}
+  - host: ${DOMAIN_NAME}
     http:
       paths:
       - path: /

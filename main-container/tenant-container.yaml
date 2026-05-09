@@ -2,27 +2,27 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: multibot
-  name: tenant-container-{{CHANNEL}}
+  name: tenant-container-${CHANNEL}
   labels:
-    app: tenant-container-{{CHANNEL}}
+    app: tenant-container-${CHANNEL}
     group: tenant-containers
     logging: my_group
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tenant-container-{{CHANNEL}}
+      app: tenant-container-${CHANNEL}
   template:
     metadata:
       labels:
-        app: tenant-container-{{CHANNEL}}
+        app: tenant-container-${CHANNEL}
         group: tenant-containers
         logging: my_group
     spec:
       containers:
-      - name: tenant-container-{{CHANNEL}}
-        image: {{IMAGE}}
-        imagePullPolicy: {{IMAGE_PULL_POLICY}}
+      - name: tenant-container-${CHANNEL}
+        image: ${IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         resources:
           requests:
             cpu: 100m
@@ -32,7 +32,7 @@ spec:
             memory: 256Mi
         env:
         - name: TWITCH_CHANNEL
-          value: "{{CHANNEL}}"
+          value: "${CHANNEL}"
         - name: TWITCH_BOT_USERNAME
           valueFrom:
             secretKeyRef:
@@ -84,10 +84,10 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: multibot
-  name: tenant-container-{{CHANNEL}}-svc
+  name: tenant-container-${CHANNEL}-svc
 spec:
   selector:
-    app: tenant-container-{{CHANNEL}}
+    app: tenant-container-${CHANNEL}
   ports:
   - protocol: TCP
     port: 8000

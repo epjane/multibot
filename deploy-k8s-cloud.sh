@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e # exit when any error happens
+set -a # automatically export all variables
 source .env.prod
+set +a
 set -x # show commands running
 
 if [[ -z "$KUBECONFIG" ]]; then
@@ -8,7 +10,6 @@ if [[ -z "$KUBECONFIG" ]]; then
   exit 1
 fi
 export IMAGE_PULL_POLICY=Always
-export KUBECONFIG
 ns=multibot #namespace
 
 kubectl create namespace $ns || :
@@ -62,10 +63,10 @@ rm app-secrets.yaml
 # done
 
 # kubectl -n $ns apply -f state-db.yaml
+export IMAGE="docker.io/${DOCKER_USERNAME}/multibot-main:latest"
+export SERVICE_TYPE="ClusterIP"
 cat main-container.yaml | \
-  sed "s,{{IMAGE}},docker.io/$DOCKER_USERNAME/multibot-main:latest,g" | \
-  sed "s,{{IMAGE_PULL_POLICY}},$IMAGE_PULL_POLICY,g" | \
-  sed "s,{{SERVICE_TYPE}},ClusterIP,g" | \
+  envsubst '$IMAGE,$IMAGE_PULL_POLICY,$SERVICE_TYPE' | \
   kubectl -n $ns apply -f -
 
 #restart the pods to get the new container images
@@ -74,9 +75,9 @@ for deployment in $(kubectl -n $ns get deployments -o custom-columns=NAME:.metad
 done
 kubectl -n $ns rollout restart deployment main-container
 
-DOMAIN_NAME=$(echo "$BASE_URL" | sed 's,https://,,g')
+export DOMAIN_NAME=$(echo "$BASE_URL" | sed 's,https://,,g')
 cat main-ingress.yaml | \
-  sed "s,{{DOMAIN_NAME}},$DOMAIN_NAME,g" | \
+  envsubst '$DOMAIN_NAME' | \
   kubectl apply -f -
 
 while kubectl -n $ns get deployment | grep ' 0 '; do
